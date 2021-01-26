@@ -1,115 +1,139 @@
 const express = require("express");
 const app = express();
-const morgan = require("morgan");
 
 const cors = require("cors");
 app.use(cors());
 
-app.use(express.static('build'));
+app.use(express.static("build"));
 
 //json-parser
 app.use(express.json());
 
-// middleware logger
+const mongoose = require("mongoose");
+
+require("dotenv").config();
+const Contact = require("./Models/contact");
+
+// middleware for logging between req and res
 const requestLogger = (request, response, next) => {
-  console.log("Method:", request.method);
-  console.log("Path:  ", request.path);
-  console.log("Body:  ", request.body);
-  console.log("---");
+  console.log("Method", request.method);
+  console.log("Path", request.path);
+  console.log("Body", request.body);
+  console.log("--------------");
   next();
 };
 
 app.use(requestLogger);
 
-let persons = [
-  {
-    id: 1,
-    name: "Artop hellas",
-    number: "3456784657",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "784657345",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "3456678934",
-  },
-];
-
-app.get("/", (request, response) => {
-  response.send("<h1>Hello World</h1>");
-});
-
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Contact.find({}).then((contacts) => {
+    response.json(contacts.map((person) => person.toJSON()));
+    // response.json(contacts);
+  });
 });
 
 app.get("/info", (request, response) => {
-  const totalContacts = persons.length;
-  const currentDate = new Date();
-  response.write(`Phonebok has info for ${totalContacts} people(s)\n`);
-  response.write(`this request is made on ${currentDate.toString()}`);
-  response.end();
+  const requestMade = new Date().toString();
+
+  Contact.countDocuments({}, (err, count) => {
+    if (err) console.log(err);
+    else {
+      console.log("number of contacts", count);
+      response.write(`Phonebok has info for ${count} people(s)\n`);
+      response.write(`this request was made on ${requestMade}`);
+      response.end();
+    }
+  });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-  if (person) response.json(person).status(200).end();
-  else response.status(404).end();
+app.get("/api/persons/:id", (request, response, next) => {
+  Contact.findById(request.params.id)
+    .then((result) => {
+      if (result) {
+        response.json(result.toJSON()).end();
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id != id);
-  response.status(204).end();
+app.delete("/api/persons/:id", (request, response, next) => {
+  Contact.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
-const newId = () => {
-  let maxId = Math.max(...persons.map((person) => person.id));
-  return maxId + 1;
-};
-
-app.post("/api/persons", (request, response) => {
-  // implement error handling for creating new entries.
-  // req is not allowed to succeed if :
-  // 1 the name or num is missing
-  // 2 the name already exists in the phonebook
-
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
-  // console.log("body", body);
-  if (!body.name) {
+
+  if (body.name === undefined) {
     return response.status(400).json({
       error: "contact name is missing",
     });
   }
 
-  if (!body.number) {
+  if (body.number === undefined) {
     return response.status(400).json({
       error: "contact number is missing",
     });
   }
 
-  const exists = persons.filter((person) => person.name.toLowerCase() === body.name.toLowerCase());
+  const contact = new Contact({
+    name: body.name,
+    number: body.number,
+  });
 
-  if (exists.length) {
-    return response.status(400).json({
-      error: "name must be unique",
-    });
-  }
-  const person = {
-    id: newId(),
+  contact
+    .save()
+    .then((result) => result.toJSON())
+    .then((savedContactWithJsonFormatted) => {
+      response.json(savedContactWithJsonFormatted);
+    })
+    .catch((error) => next(error));
+});
+
+app.put("/api/persons/:id", (request, response, next) => {
+  const body = request.body;
+
+  const updatedContact = {
     name: body.name,
     number: body.number,
   };
-  persons = persons.concat(person);
-  response.json(person);
+
+  // unable to get the data inside request this is the issue
+
+  console.log(updatedContact);
+  console.log("request ", request.params);
+
+  Contact.findByIdAndUpdate(request.params.id, updatedContact, { new: true })
+    .then((result) => {
+      response.json(result);
+    })
+    .catch((error) => next(error));
 });
 
-const PORT = process.env.PORT || 3001;
+const unkownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unkownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.log(error.message);
+  if (error.name === "CastError" && error.kind == "ObjectId") {
+    return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).send({ error: error.message });
+  }
+  next(error);
+};
+
+app.use(errorHandler);
+
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
   console.log(`App is running on port 3001 at http://localhost:${PORT}`);

@@ -2,6 +2,15 @@ POST http://localhost:3001/api/persons
 Content-Type:application/json
 
 {
-    "name":"sdyertyadff",
-    "number":"2453326753"
+    "name":"a",
+    "number":"1"
+}
+
+###
+PUT http://localhost:3001/api/persons/600d1817354aa91f3ca456e9
+Content-Type:application/json 
+
+{
+    "name":"a",
+    "number":"123"
 }
