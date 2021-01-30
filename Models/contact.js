@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const url = process.env.MONGODB_URI;
+const mongoose = require('mongoose')
+const url = process.env.MONGODB_URI
 
-console.log("connecting to ", url);
+console.log('connecting to ', url)
 
 mongoose
   .connect(url, {
@@ -11,28 +11,28 @@ mongoose
     useCreateIndex: true,
   })
   .then((result) => {
-    console.log("connected to MongoDB");
+    console.log('connected to MongoDB')
   })
   .catch((error) => {
-    console.log("Error connecting to MongoDB", error.message);
-  });
+    console.log('Error connecting to MongoDB', error.message)
+  })
 
 const contactSchema = new mongoose.Schema({
   name: {
-    type:String,
-    minlength:5
+    type: String,
+    minlength: 5,
   },
   number: {
-    type:Number,
-    maxlength:10
+    type: Number,
+    maxlength: 10,
   },
-});
+})
 
-contactSchema.set("toJSON", {
+contactSchema.set('toJSON', {
   transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id, delete returnedObject.__v;
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id, delete returnedObject.__v
   },
-});
+})
 
-module.exports = mongoose.model("Contact", contactSchema);
+module.exports = mongoose.model('Contact', contactSchema)
