@@ -1,0 +1,5 @@
+GET http://localhost:3001/api/persons/
+
+###
+
+DELETE http://localhost:3001/api/persons/id_of_person_to_be_deleted

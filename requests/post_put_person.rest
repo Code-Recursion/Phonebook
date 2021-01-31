@@ -1,0 +1,17 @@
+POST http://localhost:3001/api/persons
+Content-Type:application/json
+
+{
+    "name":"testing",
+    "number":"45234523452345"
+}
+
+###
+
+PUT http://localhost:3001/api/persons/id_of_person_to_be_updated
+Content-Type:application/json 
+
+{
+    "name":"testing",
+    "number":"1234567890"
+}
