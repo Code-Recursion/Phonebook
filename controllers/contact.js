@@ -3,8 +3,8 @@ const Contact = require('../models/contact')
 
 contactRouter.get('/', (request, response) => {
   Contact.find({}).then((contacts) => {
-    // response.json(contacts.map((person) => person.toJSON()))
-    response.json(contacts)
+    response.json(contacts.map((person) => person.toJSON()))
+    // response.json(contacts)
   })
 })
 

@@ -10,8 +10,7 @@
     "lint": "eslint .",
     "deploy":"git push heroku main"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Ajay Singh",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
