@@ -1,7 +1,7 @@
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config()
-}
-// require('dotenv').config()
+// if (process.env.NODE_ENV !== 'production') {
+//   require('dotenv').config()
+// }
+require('dotenv').config()
 
 // eslint-disable-next-line no-undef
 let MONGODB_URI = process.env.MONGODB_URI
